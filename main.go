@@ -96,10 +96,12 @@ func (m model) say(text string) tea.Cmd {
 				Sentence: text,
 			}),
 		)
-		time.Sleep(time.Second)
 		if err != nil {
 			return errMsg(err)
 		}
+		// Eliza is too fast to respond, generally.
+		// Wait a second to make things appear slow.
+		time.Sleep(time.Second)
 		return sayMsg(resp.Msg.Sentence)
 	}
 }
