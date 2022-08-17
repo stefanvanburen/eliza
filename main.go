@@ -42,6 +42,9 @@ type model struct {
 	hasIntroduced      bool
 	waitingForResponse bool
 
+	conversation *connect.BidiStreamForClient[elizav1.ConverseRequest, elizav1.ConverseResponse]
+
+	name                 string
 	introductionReceived []string
 	said                 []string
 	sayResponses         []string
@@ -71,11 +74,11 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(textinput.Blink, spinner.Tick)
 }
 
-func (m model) introduce(text string) tea.Cmd {
+func (m model) introduce(name string) tea.Cmd {
 	return func() tea.Msg {
 		introResp, err := m.client.Introduce(context.Background(),
 			connect.NewRequest(&elizav1.IntroduceRequest{
-				Name: text,
+				Name: name,
 			}),
 		)
 		if err != nil {
@@ -91,18 +94,25 @@ func (m model) introduce(text string) tea.Cmd {
 
 func (m model) say(text string) tea.Cmd {
 	return func() tea.Msg {
-		resp, err := m.client.Say(context.Background(),
-			connect.NewRequest(&elizav1.SayRequest{
+		if m.conversation == nil {
+			m.conversation = m.client.Converse(context.Background())
+		}
+		err := m.conversation.Send(
+			&elizav1.ConverseRequest{
 				Sentence: text,
-			}),
+			},
 		)
+		if err != nil {
+			return errMsg(err)
+		}
+		resp, err := m.conversation.Receive()
 		if err != nil {
 			return errMsg(err)
 		}
 		// Eliza is too fast to respond, generally.
 		// Wait a second to make things appear slow.
 		time.Sleep(time.Second)
-		return sayMsg(resp.Msg.Sentence)
+		return sayMsg(resp.Sentence)
 	}
 }
 
@@ -117,6 +127,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			text := m.textInput.Value()
 			m.textInput.Reset()
 			if !m.hasIntroduced {
+				m.name = text
 				m.textInput.Placeholder = ""
 				return m, m.introduce(text)
 			} else {
@@ -181,7 +192,8 @@ func (m model) conversationView() string {
 	// Write conversation
 	for i := 0; i < len(m.said); i++ {
 		// Things we've said
-		s.WriteString("You: ")
+		s.WriteString(m.name)
+		s.WriteString(": ")
 		s.WriteString(m.said[i])
 		s.WriteString("\n")
 		// Things Eliza has said
