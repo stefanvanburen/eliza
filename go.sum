@@ -1,7 +1,11 @@
+buf.build/gen/go/bufbuild/eliza/library/connect-go v0.5.0-20220706172350-dbde79169a01.1 h1:3K8UZEQxlXJw+1vikUG1t7iRQs/AWkgVi7/1xx8nkck=
+buf.build/gen/go/bufbuild/eliza/library/connect-go v0.5.0-20220706172350-dbde79169a01.1/go.mod h1:VRZm2m32mDL0+ajUbZIo7zBKRA0cD9u33ni6VaoklgU=
+buf.build/gen/go/bufbuild/eliza/library/go v1.28.1-20220706172350-dbde79169a01.7 h1:ujJusEFh14MRr78JDzWofYTeQHMvuYZ0TEQi/DeEoRY=
+buf.build/gen/go/bufbuild/eliza/library/go v1.28.1-20220706172350-dbde79169a01.7/go.mod h1:cyL9Q4zGZymBVYU7qAPJ4CjpESKC98DF2a/00qK94gU=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
-github.com/bufbuild/connect-go v0.3.0 h1:B0vyZrTR11SNEYpodL6P0NzluDCsuqmr8CNKblXvVto=
-github.com/bufbuild/connect-go v0.3.0/go.mod h1:4efZ2eXFENwd4p7tuLaL9m0qtTsCOzuBvrohvRGevDM=
+github.com/bufbuild/connect-go v0.5.0 h1:JFbWPWpasBqzM5h/awoRhAXmLERZQlQ5xTn42uf+5ao=
+github.com/bufbuild/connect-go v0.5.0/go.mod h1:ZEtBnQ7J/m7bvWOW+H8T/+hKQCzPVfhhhICuvtcnjlI=
 github.com/charmbracelet/bubbles v0.13.0 h1:zP/ROH3wJEBqZWKIsD50ZKKlx3ydLInq3LdD/Nrlb8w=
 github.com/charmbracelet/bubbles v0.13.0/go.mod h1:bbeTiXwPww4M031aGi8UK2HT9RDWoiNibae+1yCMtcc=
 github.com/charmbracelet/bubbletea v0.21.0/go.mod h1:GgmJMec61d08zXsOhqRC/AiOx4K4pmz+VIcRIm1FKr4=
@@ -39,8 +43,6 @@ github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJ
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/sahilm/fuzzy v0.1.0/go.mod h1:VFvziUEIMCrT6A6tw2RFIXPXXmzXbOsSHF0DOI8ZK9Y=
-go.buf.build/bufbuild/connect-go/bufbuild/eliza v1.6.6 h1:RhyX1BihovjNRGOgnLWgBMqrj0H8jcaNxVlaKEYIcn8=
-go.buf.build/bufbuild/connect-go/bufbuild/eliza v1.6.6/go.mod h1:h3RKj4BY9aODqOMRZgv5eH/0i5R6r+WwZOp0hUyeY88=
 golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

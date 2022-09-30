@@ -3,10 +3,11 @@ module github.com/stefanvanburen/eliza
 go 1.18
 
 require (
-	github.com/bufbuild/connect-go v0.3.0
+	buf.build/gen/go/bufbuild/eliza/library/connect-go v0.5.0-20220706172350-dbde79169a01.1
+	buf.build/gen/go/bufbuild/eliza/library/go v1.28.1-20220706172350-dbde79169a01.7
+	github.com/bufbuild/connect-go v0.5.0
 	github.com/charmbracelet/bubbles v0.13.0
 	github.com/charmbracelet/bubbletea v0.22.0
-	go.buf.build/bufbuild/connect-go/bufbuild/eliza v1.6.6
 )
 
 require (

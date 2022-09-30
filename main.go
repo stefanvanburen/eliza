@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"buf.build/gen/go/bufbuild/eliza/library/connect-go/buf/connect/demo/eliza/v1/elizav1connect"
+	elizav1 "buf.build/gen/go/bufbuild/eliza/library/go/buf/connect/demo/eliza/v1"
 	"github.com/bufbuild/connect-go"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	elizav1 "go.buf.build/bufbuild/connect-go/bufbuild/eliza/buf/connect/demo/eliza/v1"
-	"go.buf.build/bufbuild/connect-go/bufbuild/eliza/buf/connect/demo/eliza/v1/elizav1connect"
 )
 
 func main() {
