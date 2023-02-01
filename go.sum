@@ -1,11 +1,11 @@
-buf.build/gen/go/bufbuild/eliza/library/connect-go v0.5.0-20220706172350-dbde79169a01.1 h1:3K8UZEQxlXJw+1vikUG1t7iRQs/AWkgVi7/1xx8nkck=
-buf.build/gen/go/bufbuild/eliza/library/connect-go v0.5.0-20220706172350-dbde79169a01.1/go.mod h1:VRZm2m32mDL0+ajUbZIo7zBKRA0cD9u33ni6VaoklgU=
-buf.build/gen/go/bufbuild/eliza/library/go v1.28.1-20220706172350-dbde79169a01.7 h1:ujJusEFh14MRr78JDzWofYTeQHMvuYZ0TEQi/DeEoRY=
-buf.build/gen/go/bufbuild/eliza/library/go v1.28.1-20220706172350-dbde79169a01.7/go.mod h1:cyL9Q4zGZymBVYU7qAPJ4CjpESKC98DF2a/00qK94gU=
+buf.build/gen/go/bufbuild/eliza/bufbuild/connect-go v1.5.0-20221224180530-f3801d450ef9.1 h1:ru0XBY1jZ0V+JFDhtVaKqxf9qamhis6dxhYSm2OFw3g=
+buf.build/gen/go/bufbuild/eliza/bufbuild/connect-go v1.5.0-20221224180530-f3801d450ef9.1/go.mod h1:f3AEDvLSHMH/rlXtQP0w011C81OK6ZwghbrUxgb3ba0=
+buf.build/gen/go/bufbuild/eliza/protocolbuffers/go v1.28.1-20221224180530-f3801d450ef9.4 h1:pc5XjxZ8sAXLKJDZ/InskeVgqTdsOdX84SyGX+Ye/5E=
+buf.build/gen/go/bufbuild/eliza/protocolbuffers/go v1.28.1-20221224180530-f3801d450ef9.4/go.mod h1:o+MHFUanU15Zk5uNgkUM6WteQPoSS6xk/HlbVmiZuGI=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
-github.com/bufbuild/connect-go v0.5.0 h1:JFbWPWpasBqzM5h/awoRhAXmLERZQlQ5xTn42uf+5ao=
-github.com/bufbuild/connect-go v0.5.0/go.mod h1:ZEtBnQ7J/m7bvWOW+H8T/+hKQCzPVfhhhICuvtcnjlI=
+github.com/bufbuild/connect-go v1.5.0 h1:IfbgbzzaaZvF+OM3SfxO2EjtvNJarNAz2DIRuuNjAgc=
+github.com/bufbuild/connect-go v1.5.0/go.mod h1:9iNvh/NOsfhNBUH5CtvXeVUskQO1xsrEviH7ZArwZ3I=
 github.com/charmbracelet/bubbles v0.13.0 h1:zP/ROH3wJEBqZWKIsD50ZKKlx3ydLInq3LdD/Nrlb8w=
 github.com/charmbracelet/bubbles v0.13.0/go.mod h1:bbeTiXwPww4M031aGi8UK2HT9RDWoiNibae+1yCMtcc=
 github.com/charmbracelet/bubbletea v0.21.0/go.mod h1:GgmJMec61d08zXsOhqRC/AiOx4K4pmz+VIcRIm1FKr4=
@@ -18,7 +18,7 @@ github.com/containerd/console v1.0.3 h1:lIr7SlA5PxZyMV30bDW0MGbiOPXwc63yRuCP0ARu
 github.com/containerd/console v1.0.3/go.mod h1:7LqA/THxQ86k76b8c/EMSiaJ3h1eZkMkXar0TQ1gf3U=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
+github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/lucasb-eyer/go-colorful v1.2.0 h1:1nnpGOrhyZZuNyfu1QjKiUICQ74+3FNCN69Aj6K7nkY=
 github.com/lucasb-eyer/go-colorful v1.2.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
