@@ -5,7 +5,7 @@ go 1.18
 require (
 	buf.build/gen/go/bufbuild/eliza/bufbuild/connect-go v1.5.0-20221224180530-f3801d450ef9.1
 	buf.build/gen/go/bufbuild/eliza/protocolbuffers/go v1.28.1-20221224180530-f3801d450ef9.4
-	github.com/bufbuild/connect-go v1.5.0
+	github.com/bufbuild/connect-go v1.10.0
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 )
@@ -28,5 +28,5 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 )
