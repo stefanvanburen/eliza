@@ -3,8 +3,8 @@ module github.com/stefanvanburen/eliza
 go 1.18
 
 require (
-	buf.build/gen/go/bufbuild/eliza/bufbuild/connect-go v1.5.0-20221224180530-f3801d450ef9.1
-	buf.build/gen/go/bufbuild/eliza/protocolbuffers/go v1.28.1-20221224180530-f3801d450ef9.4
+	buf.build/gen/go/bufbuild/eliza/bufbuild/connect-go v1.10.0-20230726230109-bf1eaaff2a44.1
+	buf.build/gen/go/bufbuild/eliza/protocolbuffers/go v1.31.0-20230726230109-bf1eaaff2a44.1
 	github.com/bufbuild/connect-go v1.10.0
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
