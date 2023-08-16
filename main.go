@@ -21,7 +21,7 @@ func main() {
 		initialModel(
 			elizav1connect.NewElizaServiceClient(
 				http.DefaultClient,
-				"https://demo.connect.build",
+				"https://demo.connectrpc.com",
 			),
 		),
 	)
