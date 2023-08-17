@@ -26,7 +26,7 @@ func main() {
 		),
 	)
 
-	if err := p.Start(); err != nil {
+	if _, err := p.Run(); err != nil {
 		fmt.Printf("error: %s\n", err)
 		os.Exit(1)
 	}
@@ -71,7 +71,7 @@ func initialModel(client elizav1connect.ElizaServiceClient) model {
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(textinput.Blink, spinner.Tick)
+	return tea.Batch(textinput.Blink, m.spinner.Tick)
 }
 
 func (m model) introduce(name string) tea.Cmd {
