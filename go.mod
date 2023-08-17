@@ -3,9 +3,9 @@ module github.com/stefanvanburen/eliza
 go 1.18
 
 require (
-	buf.build/gen/go/bufbuild/eliza/bufbuild/connect-go v1.10.0-20230726230109-bf1eaaff2a44.1
-	buf.build/gen/go/bufbuild/eliza/protocolbuffers/go v1.31.0-20230726230109-bf1eaaff2a44.1
-	github.com/bufbuild/connect-go v1.10.0
+	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.11.0-20230727062025-d8fbf2620c60.1
+	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.31.0-20230727062025-d8fbf2620c60.1
+	connectrpc.com/connect v1.11.0
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 )
