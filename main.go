@@ -1,3 +1,12 @@
+/*
+Eliza interacts with the Connect ELIZA demo service.
+
+Usage:
+
+	eliza
+
+[Connect ELIZA demo service]: https://connectrpc.com/demo/
+*/
 package main
 
 import (
