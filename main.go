@@ -65,17 +65,16 @@ type model struct {
 }
 
 func initialModel(client elizav1connect.ElizaServiceClient) model {
-	ti := textinput.New()
-	ti.Placeholder = "Joseph Weizenbaum"
-	ti.Focus()
-	ti.CharLimit = 156
-	ti.Width = 50
+	textInput := textinput.New()
+	textInput.Placeholder = "Joseph Weizenbaum"
+	textInput.CharLimit = 156
+	textInput.Width = 50
+	textInput.Focus()
 
 	return model{
 		client:    client,
-		textInput: ti,
+		textInput: textInput,
 		spinner:   spinner.New(),
-		err:       nil,
 	}
 }
 
@@ -85,7 +84,7 @@ func (m model) Init() tea.Cmd {
 
 func (m model) introduce(name string) tea.Cmd {
 	return func() tea.Msg {
-		introResp, err := m.client.Introduce(context.Background(),
+		introduceResponse, err := m.client.Introduce(context.Background(),
 			connect.NewRequest(&elizav1.IntroduceRequest{
 				Name: name,
 			}),
@@ -94,8 +93,8 @@ func (m model) introduce(name string) tea.Cmd {
 			return errMsg(err)
 		}
 		introductionLines := []string{}
-		for introResp.Receive() {
-			introductionLines = append(introductionLines, introResp.Msg().Sentence)
+		for introduceResponse.Receive() {
+			introductionLines = append(introductionLines, introduceResponse.Msg().Sentence)
 		}
 		return introductionMsg(introductionLines)
 	}
@@ -106,22 +105,21 @@ func (m model) say(text string) tea.Cmd {
 		if m.conversation == nil {
 			m.conversation = m.client.Converse(context.Background())
 		}
-		err := m.conversation.Send(
+		if err := m.conversation.Send(
 			&elizav1.ConverseRequest{
 				Sentence: text,
 			},
-		)
-		if err != nil {
+		); err != nil {
 			return errMsg(err)
 		}
-		resp, err := m.conversation.Receive()
+		conversationResponse, err := m.conversation.Receive()
 		if err != nil {
 			return errMsg(err)
 		}
 		// Eliza is too fast to respond, generally.
 		// Wait a second to make things appear slow.
 		time.Sleep(time.Second)
-		return sayMsg(resp.Sentence)
+		return sayMsg(conversationResponse.Sentence)
 	}
 }
 
@@ -181,47 +179,47 @@ func (m model) View() string {
 }
 
 func (m model) introductionView() string {
-	var s strings.Builder
-	s.WriteString("Let's introduce you! - what's your name?")
-	s.WriteString("\n")
-	s.WriteString("\n")
+	var introduction strings.Builder
+	introduction.WriteString("Let's introduce you! - what's your name?")
+	introduction.WriteString("\n")
+	introduction.WriteString("\n")
 	if m.waitingForResponse {
-		s.WriteString(m.spinner.View())
+		introduction.WriteString(m.spinner.View())
 	} else {
-		s.WriteString(m.textInput.View())
+		introduction.WriteString(m.textInput.View())
 	}
-	return s.String()
+	return introduction.String()
 }
 
 func (m model) conversationView() string {
-	var s strings.Builder
+	var conversation strings.Builder
 	// Write introduction
 	for _, introductionLine := range m.introductionReceived {
-		s.WriteString(introductionLine)
-		s.WriteString("\n")
+		conversation.WriteString(introductionLine)
+		conversation.WriteString("\n")
 	}
-	s.WriteString("\n")
+	conversation.WriteString("\n")
 	// Write conversation
 	for i := 0; i < len(m.said); i++ {
 		// Things we've said
-		s.WriteString(m.name)
-		s.WriteString(": ")
-		s.WriteString(m.said[i])
-		s.WriteString("\n")
+		conversation.WriteString(m.name)
+		conversation.WriteString(": ")
+		conversation.WriteString(m.said[i])
+		conversation.WriteString("\n")
 		// Things Eliza has said
-		s.WriteString("Eliza: ")
+		conversation.WriteString("Eliza: ")
 		// If this is the last thing Eliza has said and we're waiting for a
 		// response, show the spinner.
 		// Otherwise, show the response.
 		if i == len(m.said)-1 && m.waitingForResponse {
-			s.WriteString(m.spinner.View())
+			conversation.WriteString(m.spinner.View())
 		} else {
-			s.WriteString(m.sayResponses[i])
+			conversation.WriteString(m.sayResponses[i])
 		}
-		s.WriteString("\n")
+		conversation.WriteString("\n")
 	}
 	if !m.waitingForResponse {
-		s.WriteString(m.textInput.View())
+		conversation.WriteString(m.textInput.View())
 	}
-	return s.String()
+	return conversation.String()
 }
