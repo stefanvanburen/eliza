@@ -1,5 +1,5 @@
 /*
-Eliza interacts with the Connect ELIZA demo service.
+Eliza interacts with the [Connect ELIZA demo service].
 
 Usage:
 
