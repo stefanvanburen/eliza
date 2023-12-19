@@ -195,6 +195,7 @@ func (m model) conversationView() string {
 	var conversation strings.Builder
 	// Write introduction
 	for _, introductionLine := range m.introductionReceived {
+		conversation.WriteString("Eliza: ")
 		conversation.WriteString(introductionLine)
 		conversation.WriteString("\n")
 	}
