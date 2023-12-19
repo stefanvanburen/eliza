@@ -5,7 +5,7 @@ go 1.18
 require (
 	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.12.0-20230913231627-233fca715f49.1
 	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.31.0-20230913231627-233fca715f49.2
-	connectrpc.com/connect v1.12.0
+	connectrpc.com/connect v1.13.0
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 )
@@ -27,6 +27,6 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.3.8 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 )
