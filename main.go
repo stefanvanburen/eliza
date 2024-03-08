@@ -12,7 +12,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -20,16 +19,19 @@ import (
 	"buf.build/gen/go/connectrpc/eliza/connectrpc/go/connectrpc/eliza/v1/elizav1connect"
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
 	"connectrpc.com/connect"
+	"github.com/bufbuild/httplb"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
+	client := httplb.NewClient()
+	defer client.Close()
 	p := tea.NewProgram(
 		initialModel(
 			elizav1connect.NewElizaServiceClient(
-				http.DefaultClient,
+				client,
 				"https://demo.connectrpc.com",
 			),
 		),
