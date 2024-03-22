@@ -84,47 +84,6 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(textinput.Blink, m.spinner.Tick)
 }
 
-func (m model) introduce(name string) tea.Cmd {
-	return func() tea.Msg {
-		introduceResponse, err := m.client.Introduce(context.Background(),
-			connect.NewRequest(&elizav1.IntroduceRequest{
-				Name: name,
-			}),
-		)
-		if err != nil {
-			return errMsg(err)
-		}
-		introductionLines := []string{}
-		for introduceResponse.Receive() {
-			introductionLines = append(introductionLines, introduceResponse.Msg().Sentence)
-		}
-		return introductionMsg(introductionLines)
-	}
-}
-
-func (m model) say(text string) tea.Cmd {
-	return func() tea.Msg {
-		if m.conversation == nil {
-			m.conversation = m.client.Converse(context.Background())
-		}
-		if err := m.conversation.Send(
-			&elizav1.ConverseRequest{
-				Sentence: text,
-			},
-		); err != nil {
-			return errMsg(err)
-		}
-		conversationResponse, err := m.conversation.Receive()
-		if err != nil {
-			return errMsg(err)
-		}
-		// Eliza is too fast to respond, generally.
-		// Wait a second to make things appear slow.
-		time.Sleep(time.Second)
-		return sayMsg(conversationResponse.Sentence)
-	}
-}
-
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
@@ -225,4 +184,45 @@ func (m model) conversationView() string {
 		conversation.WriteString(m.textInput.View())
 	}
 	return conversation.String()
+}
+
+func (m model) introduce(name string) tea.Cmd {
+	return func() tea.Msg {
+		introduceResponse, err := m.client.Introduce(context.Background(),
+			connect.NewRequest(&elizav1.IntroduceRequest{
+				Name: name,
+			}),
+		)
+		if err != nil {
+			return errMsg(err)
+		}
+		introductionLines := []string{}
+		for introduceResponse.Receive() {
+			introductionLines = append(introductionLines, introduceResponse.Msg().Sentence)
+		}
+		return introductionMsg(introductionLines)
+	}
+}
+
+func (m model) say(text string) tea.Cmd {
+	return func() tea.Msg {
+		if m.conversation == nil {
+			m.conversation = m.client.Converse(context.Background())
+		}
+		if err := m.conversation.Send(
+			&elizav1.ConverseRequest{
+				Sentence: text,
+			},
+		); err != nil {
+			return errMsg(err)
+		}
+		conversationResponse, err := m.conversation.Receive()
+		if err != nil {
+			return errMsg(err)
+		}
+		// Eliza is too fast to respond, generally.
+		// Wait a second to make things appear slow.
+		time.Sleep(time.Second)
+		return sayMsg(conversationResponse.Sentence)
+	}
 }
