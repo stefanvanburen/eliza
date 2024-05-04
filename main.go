@@ -28,16 +28,15 @@ import (
 func main() {
 	client := httplb.NewClient()
 	defer client.Close()
-	p := tea.NewProgram(
+
+	if _, err := tea.NewProgram(
 		initialModel(
 			elizav1connect.NewElizaServiceClient(
 				client,
 				"https://demo.connectrpc.com",
 			),
 		),
-	)
-
-	if _, err := p.Run(); err != nil {
+	).Run(); err != nil {
 		fmt.Printf("error: %s\n", err)
 		os.Exit(1)
 	}
