@@ -5,7 +5,7 @@ go 1.18
 require (
 	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.16.1-20230913231627-233fca715f49.1
 	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.34.0-20230913231627-233fca715f49.1
-	connectrpc.com/connect v1.16.1
+	connectrpc.com/connect v1.16.2
 	github.com/bufbuild/httplb v0.3.0
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.25.0
