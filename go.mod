@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.16.2-20230913231627-233fca715f49.1
-	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.34.1-20230913231627-233fca715f49.1
+	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.34.2-20230913231627-233fca715f49.2
 	connectrpc.com/connect v1.16.2
 	github.com/bufbuild/httplb v0.3.0
 	github.com/charmbracelet/bubbles v0.18.0
@@ -34,5 +34,5 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 )
