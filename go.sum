@@ -2,8 +2,8 @@ buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.16.2-20230913231627-233fca715
 buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.16.2-20230913231627-233fca715f49.1/go.mod h1:5GUmUhyS3W/2Zixkc4Pg6v6LPcOk5IChajewv5h9Fyo=
 buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.34.2-20230913231627-233fca715f49.2 h1:MRFJzeVcpEWZdqUXouRAAIEJp0ezDwT9AFDfBqZb4i4=
 buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.34.2-20230913231627-233fca715f49.2/go.mod h1:vrT2EnCJnudBmUK0GhdEQ1vIs5vo0Md3LzBSVwinzKE=
-connectrpc.com/connect v1.16.2 h1:ybd6y+ls7GOlb7Bh5C8+ghA6SvCBajHwxssO2CGFjqE=
-connectrpc.com/connect v1.16.2/go.mod h1:n2kgwskMHXC+lVqb18wngEpF95ldBHXjZYJussz5FRc=
+connectrpc.com/connect v1.17.0 h1:W0ZqMhtVzn9Zhn2yATuUokDLO5N+gIuBWMOnsQrfmZk=
+connectrpc.com/connect v1.17.0/go.mod h1:0292hj1rnx8oFrStN7cB4jjVBeqs+Yx5yDIC2prWDO8=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
