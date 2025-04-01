@@ -1,10 +1,9 @@
 module github.com/stefanvanburen/eliza
 
 go 1.23.4
-
 require (
 	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.18.1-20230913231627-233fca715f49.1
-	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.4-20230913231627-233fca715f49.1
+	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.6-20230913231627-233fca715f49.1
 	connectrpc.com/connect v1.18.1
 	github.com/bufbuild/httplb v0.3.1
 	github.com/charmbracelet/bubbles v0.20.0
@@ -30,5 +29,5 @@ require (
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	google.golang.org/protobuf v1.36.4 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 )
