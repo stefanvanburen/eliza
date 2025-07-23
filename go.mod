@@ -1,6 +1,6 @@
 module github.com/stefanvanburen/eliza
 
-go 1.23.4
+go 1.24.5
 
 require (
 	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.18.1-20230913231627-233fca715f49.1
