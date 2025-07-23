@@ -6,5 +6,5 @@ It uses [bubbletea](https://github.com/charmbracelet/bubbletea) for rendering th
 ## Usage
 
 ```console
-$ go run github.com/stefanvanburen/eliza@latest
+go run github.com/stefanvanburen/eliza@latest
 ```
