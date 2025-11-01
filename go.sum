@@ -2,8 +2,8 @@ buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.19.0-20230913231627-233fca715
 buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.19.0-20230913231627-233fca715f49.1/go.mod h1:cJNRp1vR+f3JmTGo8YICmZLT+7fJTdilpI7GMaxWaLs=
 buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.9-20230913231627-233fca715f49.1 h1:be+Lmt5B/c6Ou6tsT8TCjcNJrwTxVGkm7AtVWqHdKjI=
 buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.9-20230913231627-233fca715f49.1/go.mod h1:yet2pzIY2XLbtOZClw6nbDmmEqD/jXlUxLJScrr5Usg=
-connectrpc.com/connect v1.19.0 h1:LuqUbq01PqbtL0o7vn0WMRXzR2nNsiINe5zfcJ24pJM=
-connectrpc.com/connect v1.19.0/go.mod h1:tN20fjdGlewnSFeZxLKb0xwIZ6ozc3OQs2hTXy4du9w=
+connectrpc.com/connect v1.19.1 h1:R5M57z05+90EfEvCY1b7hBxDVOUl45PrtXtAV2fOC14=
+connectrpc.com/connect v1.19.1/go.mod h1:tN20fjdGlewnSFeZxLKb0xwIZ6ozc3OQs2hTXy4du9w=
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c h1:pxW6RcqyfI9/kWtOwnv/G+AzdKuy2ZrqINhenH4HyNs=
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
