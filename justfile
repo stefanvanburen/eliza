@@ -1,7 +1,6 @@
 # https://just.systems
 
 # Run lint and test.
-[parallel]
 @default: lint test
 
 # Run tests with race detector enabled.
