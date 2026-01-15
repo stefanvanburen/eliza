@@ -347,9 +347,8 @@ func TestIntroduceMethod(t *testing.T) {
 
 	// Execute the command and see what message it produces
 	msg := cmd()
-	switch msg.(type) {
+	switch introMsg := msg.(type) {
 	case introductionMsg:
-		introMsg := msg.(introductionMsg)
 		attest.NotEqual(t, len(introMsg), 0)
 		foundName := false
 		for _, s := range introMsg {
@@ -360,8 +359,7 @@ func TestIntroduceMethod(t *testing.T) {
 		}
 		attest.True(t, foundName, attest.Sprintf("introduction should contain name"))
 	case errMsg:
-		err := msg.(errMsg)
-		attest.False(t, true, attest.Sprintf("unexpected error from introduce: %v", err))
+		attest.False(t, true, attest.Sprintf("unexpected error from introduce: %v", introMsg))
 	default:
 		attest.False(t, true, attest.Sprintf("unexpected message type: %T", msg))
 	}
