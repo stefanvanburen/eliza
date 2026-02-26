@@ -20,9 +20,9 @@ import (
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
 	"connectrpc.com/connect"
 	"github.com/bufbuild/httplb"
-	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
 )
 
 func main() {
@@ -69,7 +69,7 @@ func initialModel(client elizav1connect.ElizaServiceClient) model {
 	textInput := textinput.New()
 	textInput.Placeholder = "Joseph Weizenbaum"
 	textInput.CharLimit = 156
-	textInput.Width = 50
+	textInput.SetWidth(50)
 	textInput.Focus()
 
 	return model{
@@ -87,9 +87,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEnter:
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "enter":
 			m.waitingForResponse = true
 			text := m.textInput.Value()
 			m.textInput.Reset()
@@ -101,7 +101,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.said = append(m.said, text)
 				return m, m.say(text)
 			}
-		case tea.KeyCtrlC, tea.KeyEsc:
+		case "ctrl+c", "esc":
 			return m, tea.Quit
 		default:
 			m.textInput, cmd = m.textInput.Update(msg)
@@ -128,14 +128,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (m model) View() string {
+func (m model) View() tea.View {
+	v := tea.NewView("")
 	if m.err != nil {
-		return fmt.Sprintf("An error occurred: %s", m.err)
+		v.SetContent(fmt.Sprintf("An error occurred: %s", m.err))
+	} else if !m.hasIntroduced {
+		v.SetContent(m.introductionView())
+	} else {
+		v.SetContent(m.conversationView())
 	}
-	if !m.hasIntroduced {
-		return m.introductionView()
-	}
-	return m.conversationView()
+	return v
 }
 
 func (m model) introductionView() string {
