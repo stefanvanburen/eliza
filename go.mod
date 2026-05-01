@@ -7,7 +7,7 @@ require (
 	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.11-20230913231627-233fca715f49.1
 	charm.land/bubbles/v2 v2.1.0
 	charm.land/bubbletea/v2 v2.0.2
-	connectrpc.com/connect v1.19.1
+	connectrpc.com/connect v1.19.2
 	github.com/bufbuild/httplb v0.4.1
 	go.akshayshah.org/attest v1.1.0
 	go.akshayshah.org/memhttp v0.1.0
