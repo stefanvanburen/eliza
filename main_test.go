@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"buf.build/gen/go/connectrpc/eliza/connectrpc/go/connectrpc/eliza/v1/elizav1connect"
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
@@ -18,6 +20,12 @@ import (
 // fakeElizaServiceHandler implements the ELIZA service for testing.
 type fakeElizaServiceHandler struct {
 	elizav1connect.UnimplementedElizaServiceHandler
+
+	// converseCalls counts how many Converse streams have been opened.
+	converseCalls atomic.Int32
+	// converseDone receives a value each time a Converse handler returns
+	// (i.e. the client closed its side of the stream).
+	converseDone chan struct{}
 }
 
 func (f *fakeElizaServiceHandler) Introduce(
@@ -55,6 +63,10 @@ func (f *fakeElizaServiceHandler) Converse(
 	ctx context.Context,
 	stream *connect.BidiStream[elizav1.ConverseRequest, elizav1.ConverseResponse],
 ) error {
+	f.converseCalls.Add(1)
+	if f.converseDone != nil {
+		defer func() { f.converseDone <- struct{}{} }()
+	}
 	for {
 		req, err := stream.Receive()
 		if err == io.EOF {
@@ -122,10 +134,22 @@ func startFakeServerWithErrors(t *testing.T) elizav1connect.ElizaServiceClient {
 // startFakeServer creates an in-memory ELIZA service and returns the client.
 func startFakeServer(t *testing.T) elizav1connect.ElizaServiceClient {
 	t.Helper()
+	client, _ := startFakeServerWithHandler(t)
+	return client
+}
+
+// startFakeServerWithHandler creates an in-memory ELIZA service and returns
+// both the client and the handler, so tests can observe handler-side state.
+func startFakeServerWithHandler(t *testing.T) (elizav1connect.ElizaServiceClient, *fakeElizaServiceHandler) {
+	t.Helper()
+
+	handler := &fakeElizaServiceHandler{
+		converseDone: make(chan struct{}, 8),
+	}
 
 	// Setup Connect handlers
 	mux := http.NewServeMux()
-	mux.Handle(elizav1connect.NewElizaServiceHandler(&fakeElizaServiceHandler{}))
+	mux.Handle(elizav1connect.NewElizaServiceHandler(handler))
 
 	// Create in-memory HTTP server with TLS and HTTP/2 support for bidi streams
 	// The bidirectional Converse RPC requires HTTP/2, which is enabled by default when TLS is used
@@ -137,7 +161,103 @@ func startFakeServer(t *testing.T) elizav1connect.ElizaServiceClient {
 		attest.Ok(t, server.Close())
 	})
 
-	return elizav1connect.NewElizaServiceClient(server.Client(), "https://example.com")
+	return elizav1connect.NewElizaServiceClient(server.Client(), "https://example.com"), handler
+}
+
+// sendMessage drives a full conversation exchange through the Update loop:
+// it types text, presses enter, executes the returned command, and feeds the
+// resulting message back into Update — the way the Bubble Tea runtime would.
+func sendMessage(t *testing.T, m model, text string) model {
+	t.Helper()
+
+	m.textInput.SetValue(text)
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	m = newModel.(model)
+	attest.True(t, cmd != nil, attest.Sprintf("expected a command from enter"))
+
+	msg := cmd()
+	if err, ok := msg.(errMsg); ok {
+		t.Fatalf("expected sayMsg, got error: %v", err)
+	}
+
+	newModel, _ = m.Update(msg)
+	return newModel.(model)
+}
+
+func TestConverseStreamIsReused(t *testing.T) {
+	t.Parallel()
+
+	client, handler := startFakeServerWithHandler(t)
+	m := initialModel(client)
+	m.hasIntroduced = true
+	m.name = "User"
+	m.introductionReceived = []string{"Hello User"}
+
+	m = sendMessage(t, m, "hello")
+	m = sendMessage(t, m, "how are you?")
+
+	attest.Equal(t, len(m.sayResponses), 2)
+	// Both messages must travel over a single Converse stream.
+	attest.Equal(t, handler.converseCalls.Load(), int32(1))
+}
+
+func TestConverseStreamClosedOnQuit(t *testing.T) {
+	t.Parallel()
+
+	client, handler := startFakeServerWithHandler(t)
+	m := initialModel(client)
+	m.hasIntroduced = true
+	m.name = "User"
+	m.introductionReceived = []string{"Hello User"}
+
+	m = sendMessage(t, m, "hello")
+
+	// Quit; the client must close its side of the stream so the server
+	// handler returns.
+	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
+	attest.True(t, cmd != nil)
+
+	select {
+	case <-handler.converseDone:
+		// Handler returned: stream was closed.
+	case <-time.After(3 * time.Second):
+		t.Fatal("Converse handler still running after quit: stream was never closed")
+	}
+}
+
+func TestEnterWhileWaitingForResponseIsIgnored(t *testing.T) {
+	t.Parallel()
+
+	client := startFakeServer(t)
+	m := initialModel(client)
+	m.hasIntroduced = true
+	m.name = "User"
+	m.introductionReceived = []string{"Hello User"}
+	m.said = []string{"first message"}
+	m.sayResponses = nil // response not yet received
+	m.waitingForResponse = true
+
+	// Pressing enter while waiting must not send another message.
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	m = newModel.(model)
+	attest.True(t, cmd == nil, attest.Sprintf("enter while waiting should be ignored"))
+	attest.Equal(t, len(m.said), 1)
+
+	// And the view must render without panicking.
+	view := m.View()
+	attest.True(t, len(view.Content) > 0)
+}
+
+func TestIntroduceStreamErrorIsSurfaced(t *testing.T) {
+	t.Parallel()
+
+	client := startFakeServerWithErrors(t)
+	m := initialModel(client)
+
+	msg := m.introduce("User")()
+
+	_, ok := msg.(errMsg)
+	attest.True(t, ok, attest.Sprintf("expected errMsg, got %T: %v", msg, msg))
 }
 
 func TestInitialModelConfiguration(t *testing.T) {
@@ -350,9 +470,9 @@ func TestEnterKeyInIntroduction(t *testing.T) {
 	client := startFakeServer(t)
 	m := initialModel(client)
 
-	// Simulate pressing enter in introduction mode
-	// Using rune 13 which represents the Enter key (without Text field)
-	newModel, cmd := m.Update(tea.KeyPressMsg{Code: rune(13)})
+	// Simulate typing a name and pressing enter in introduction mode
+	m.textInput.SetValue("Charlie")
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if cast, ok := newModel.(model); ok {
 		// After pressing enter, should be waiting for response in introduction flow
 		attest.True(t, cast.waitingForResponse, attest.Sprintf("should be waiting for response after enter in introduction"))
@@ -371,8 +491,8 @@ func TestEnterKeyInConversation(t *testing.T) {
 	m.name = "User"
 
 	// Simulate typing and pressing enter in conversation mode
-	// Using rune 13 which represents the Enter key (without Text field)
-	newModel, cmd := m.Update(tea.KeyPressMsg{Code: rune(13)})
+	m.textInput.SetValue("How are you?")
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if cast, ok := newModel.(model); ok {
 		// After pressing enter in conversation, should be waiting for response
 		attest.True(t, cast.waitingForResponse, attest.Sprintf("should be waiting for response after enter in conversation"))
@@ -386,10 +506,11 @@ func TestSayCommand(t *testing.T) {
 	client := startFakeServer(t)
 	m := initialModel(client)
 
-	// Set up as if we've already had introduction
+	// Set up as if we've already had introduction and opened the stream
 	m.hasIntroduced = true
 	m.name = "Charlie"
 	m.introductionReceived = []string{"Hello Charlie"}
+	m.conversation = m.client.Converse(context.Background())
 
 	// Execute the say command
 	cmd := m.say("How are you?")
@@ -418,10 +539,11 @@ func TestSayCommandWithServerError(t *testing.T) {
 	client := startFakeServerWithErrors(t)
 	m := initialModel(client)
 
-	// Set up as if we've already had introduction
+	// Set up as if we've already had introduction and opened the stream
 	m.hasIntroduced = true
 	m.name = "User"
 	m.introductionReceived = []string{"Hello User"}
+	m.conversation = m.client.Converse(context.Background())
 
 	// Execute the say command - should fail because server returns error
 	cmd := m.say("Tell me more")

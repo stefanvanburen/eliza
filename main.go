@@ -90,18 +90,31 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "enter":
-			m.waitingForResponse = true
+			if m.waitingForResponse {
+				// Already waiting on ELIZA; ignore until the
+				// response arrives.
+				return m, nil
+			}
 			text := m.textInput.Value()
+			if text == "" {
+				return m, nil
+			}
+			m.waitingForResponse = true
 			m.textInput.Reset()
 			if !m.hasIntroduced {
 				m.name = text
 				m.textInput.Placeholder = ""
 				return m, m.introduce(text)
-			} else {
-				m.said = append(m.said, text)
-				return m, m.say(text)
 			}
+			m.said = append(m.said, text)
+			if m.conversation == nil {
+				// Open the bidi stream once, on first use; it is
+				// reused for the rest of the conversation.
+				m.conversation = m.client.Converse(context.Background())
+			}
+			return m, m.say(text)
 		case "ctrl+c", "esc":
+			m.closeConversation()
 			return m, tea.Quit
 		default:
 			m.textInput, cmd = m.textInput.Update(msg)
@@ -109,6 +122,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case errMsg:
 		m.err = msg
+		m.closeConversation()
 		return m, tea.Quit
 	case spinner.TickMsg:
 		m.spinner, cmd = m.spinner.Update(msg)
@@ -197,19 +211,31 @@ func (m model) introduce(name string) tea.Cmd {
 		if err != nil {
 			return errMsg(err)
 		}
-		introductionLines := []string{}
+		defer introduceResponse.Close()
+		var introductionLines []string
 		for introduceResponse.Receive() {
 			introductionLines = append(introductionLines, introduceResponse.Msg().Sentence)
+		}
+		// Receive returns false on both end-of-stream and error;
+		// surface the error if there was one.
+		if err := introduceResponse.Err(); err != nil {
+			return errMsg(err)
 		}
 		return introductionMsg(introductionLines)
 	}
 }
 
+// closeConversation closes both sides of the Converse stream, if one was
+// opened, so the server handler can return.
+func (m model) closeConversation() {
+	if m.conversation != nil {
+		_ = m.conversation.CloseRequest()
+		_ = m.conversation.CloseResponse()
+	}
+}
+
 func (m model) say(text string) tea.Cmd {
 	return func() tea.Msg {
-		if m.conversation == nil {
-			m.conversation = m.client.Converse(context.Background())
-		}
 		if err := m.conversation.Send(
 			&elizav1.ConverseRequest{
 				Sentence: text,
