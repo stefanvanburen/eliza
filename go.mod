@@ -1,4 +1,4 @@
-module github.com/stefanvanburen/eliza
+module go.vanburen.xyz/eliza
 
 go 1.26.5
 
