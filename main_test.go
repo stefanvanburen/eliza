@@ -10,8 +10,8 @@ import (
 
 	"buf.build/gen/go/connectrpc/eliza/connectrpc/go/connectrpc/eliza/v1/elizav1connect"
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
-	"connectrpc.com/connect"
 	tea "charm.land/bubbletea/v2"
+	"connectrpc.com/connect"
 	"go.akshayshah.org/attest"
 	"go.akshayshah.org/memhttp"
 	"net/http"
