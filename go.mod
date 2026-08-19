@@ -1,6 +1,6 @@
 module go.vanburen.xyz/eliza
 
-go 1.26.5
+go 1.27.0
 
 require (
 	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.20.0-20230913231627-233fca715f49.1
