@@ -6,7 +6,7 @@ import (
 	"io"
 	"sync/atomic"
 	"testing"
-	"time"
+	"testing/synctest"
 
 	"buf.build/gen/go/connectrpc/eliza/connectrpc/go/connectrpc/eliza/v1/elizav1connect"
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
@@ -173,42 +173,57 @@ func sendMessage(t *testing.T, m model, text string) model {
 func TestConverseStreamIsReused(t *testing.T) {
 	t.Parallel()
 
-	client, handler := startFakeServerWithHandler(t)
-	m := initialModel(client)
-	m.hasIntroduced = true
-	m.name = "User"
-	m.introductionReceived = []string{"Hello User"}
+	// In a bubble because say() sleeps a deliberate second per response to
+	// make ELIZA look like it is thinking. Two messages here, so this test
+	// used to spend two real seconds proving something about stream reuse
+	// that has nothing to do with the delay. Bubble time is free.
 
-	m = sendMessage(t, m, "hello")
-	m = sendMessage(t, m, "how are you?")
+	synctest.Test(t, func(t *testing.T) {
+		client, handler := startFakeServerWithHandler(t)
+		m := initialModel(client)
+		m.hasIntroduced = true
+		m.name = "User"
+		m.introductionReceived = []string{"Hello User"}
 
-	ok.Equal(t, len(m.sayResponses), 2)
-	// Both messages must travel over a single Converse stream.
-	ok.Equal(t, handler.converseCalls.Load(), int32(1))
+		m = sendMessage(t, m, "hello")
+		m = sendMessage(t, m, "how are you?")
+
+		ok.Equal(t, len(m.sayResponses), 2)
+		// Both messages must travel over a single Converse stream.
+		ok.Equal(t, handler.converseCalls.Load(), int32(1))
+	})
 }
 
 func TestConverseStreamClosedOnQuit(t *testing.T) {
 	t.Parallel()
 
-	client, handler := startFakeServerWithHandler(t)
-	m := initialModel(client)
-	m.hasIntroduced = true
-	m.name = "User"
-	m.introductionReceived = []string{"Hello User"}
+	synctest.Test(t, func(t *testing.T) {
+		client, handler := startFakeServerWithHandler(t)
+		m := initialModel(client)
+		m.hasIntroduced = true
+		m.name = "User"
+		m.introductionReceived = []string{"Hello User"}
 
-	m = sendMessage(t, m, "hello")
+		m = sendMessage(t, m, "hello")
 
-	// Quit; the client must close its side of the stream so the server
-	// handler returns.
-	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
-	ok.True(t, cmd != nil)
+		// Quit; the client must close its side of the stream so the server
+		// handler returns.
+		_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
+		ok.True(t, cmd != nil)
 
-	select {
-	case <-handler.converseDone:
-		// Handler returned: stream was closed.
-	case <-time.After(3 * time.Second):
-		ok.True(t, false, ok.Sprintf("Converse handler still running after quit: the stream was never closed"))
-	}
+		// Wait until every other goroutine in the bubble is durably blocked.
+		// At that point the handler has either returned or never will, so the
+		// check below needs no timeout to guess at -- the old three seconds
+		// was both a slow failure and, on a loaded machine, a flaky pass.
+		synctest.Wait()
+
+		select {
+		case <-handler.converseDone:
+			// Handler returned: stream was closed.
+		default:
+			ok.True(t, false, ok.Sprintf("Converse handler still running after quit: the stream was never closed"))
+		}
+	})
 }
 
 func TestEnterWhileWaitingForResponseIsIgnored(t *testing.T) {
@@ -489,33 +504,38 @@ func TestEnterKeyInConversation(t *testing.T) {
 func TestSayCommand(t *testing.T) {
 	t.Parallel()
 
-	client := startFakeServer(t)
-	m := initialModel(client)
+	// In a bubble for the deliberate one-second delay inside say(); see
+	// TestConverseStreamIsReused.
 
-	// Set up as if we've already had introduction and opened the stream
-	m.hasIntroduced = true
-	m.name = "Charlie"
-	m.introductionReceived = []string{"Hello Charlie"}
-	m.conversation = m.client.Converse(context.Background())
+	synctest.Test(t, func(t *testing.T) {
+		client := startFakeServer(t)
+		m := initialModel(client)
 
-	// Execute the say command
-	cmd := m.say("How are you?")
-	ok.True(t, cmd != nil, ok.Sprintf("cmd should be non-nil"))
+		// Set up as if we've already had introduction and opened the stream
+		m.hasIntroduced = true
+		m.name = "Charlie"
+		m.introductionReceived = []string{"Hello Charlie"}
+		m.conversation = m.client.Converse(context.Background())
 
-	// Actually execute the command and check the result
-	msg := cmd()
+		// Execute the say command
+		cmd := m.say("How are you?")
+		ok.True(t, cmd != nil, ok.Sprintf("cmd should be non-nil"))
 
-	// Check what type of message we got
-	switch v := msg.(type) {
-	case sayMsg:
-		// Successfully received response from ELIZA
-		ok.True(t, len(v) > 0)
-	case errMsg:
-		// Stream communication error is acceptable - still exercises the code path
-		_ = v
-	default:
-		ok.True(t, false, ok.Sprintf("unexpected message type: %T", msg))
-	}
+		// Actually execute the command and check the result
+		msg := cmd()
+
+		// Check what type of message we got
+		switch v := msg.(type) {
+		case sayMsg:
+			// Successfully received response from ELIZA
+			ok.True(t, len(v) > 0)
+		case errMsg:
+			// Stream communication error is acceptable - still exercises the code path
+			_ = v
+		default:
+			ok.True(t, false, ok.Sprintf("unexpected message type: %T", msg))
+		}
+	})
 }
 
 func TestSayCommandWithServerError(t *testing.T) {
