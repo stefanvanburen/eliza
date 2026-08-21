@@ -12,8 +12,8 @@ import (
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
 	tea "charm.land/bubbletea/v2"
 	"connectrpc.com/connect"
-	"go.akshayshah.org/attest"
 	"go.akshayshah.org/memhttp"
+	"go.vanburen.xyz/ok"
 	"net/http"
 )
 
@@ -122,10 +122,10 @@ func startFakeServerWithErrors(t *testing.T) elizav1connect.ElizaServiceClient {
 	mux.Handle(elizav1connect.NewElizaServiceHandler(&fakeElizaServiceErrorHandler{}))
 
 	server, err := memhttp.New(mux)
-	attest.Ok(t, err, attest.Fatal())
+	ok.MustNoError(t, err)
 
 	t.Cleanup(func() {
-		attest.Ok(t, server.Close())
+		ok.NoError(t, server.Close())
 	})
 
 	return elizav1connect.NewElizaServiceClient(server.Client(), "https://example.com")
@@ -154,11 +154,11 @@ func startFakeServerWithHandler(t *testing.T) (elizav1connect.ElizaServiceClient
 	// Create in-memory HTTP server with TLS and HTTP/2 support for bidi streams
 	// The bidirectional Converse RPC requires HTTP/2, which is enabled by default when TLS is used
 	server, err := memhttp.New(mux)
-	attest.Ok(t, err, attest.Fatal())
+	ok.MustNoError(t, err)
 
 	// Cleanup
 	t.Cleanup(func() {
-		attest.Ok(t, server.Close())
+		ok.NoError(t, server.Close())
 	})
 
 	return elizav1connect.NewElizaServiceClient(server.Client(), "https://example.com"), handler
@@ -173,11 +173,14 @@ func sendMessage(t *testing.T, m model, text string) model {
 	m.textInput.SetValue(text)
 	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	m = newModel.(model)
-	attest.True(t, cmd != nil, attest.Sprintf("expected a command from enter"))
+	ok.True(t, cmd != nil, ok.Sprintf("expected a command from enter"))
 
 	msg := cmd()
-	if err, ok := msg.(errMsg); ok {
-		t.Fatalf("expected sayMsg, got error: %v", err)
+	if errM, isErr := msg.(errMsg); isErr {
+		// Must not go on to Update with an errMsg, so report and hand the
+		// model back unchanged; the caller's own assertions then fail too.
+		ok.True(t, false, ok.Sprintf("expected sayMsg, got error: %v", errM))
+		return m
 	}
 
 	newModel, _ = m.Update(msg)
@@ -196,9 +199,9 @@ func TestConverseStreamIsReused(t *testing.T) {
 	m = sendMessage(t, m, "hello")
 	m = sendMessage(t, m, "how are you?")
 
-	attest.Equal(t, len(m.sayResponses), 2)
+	ok.Equal(t, len(m.sayResponses), 2)
 	// Both messages must travel over a single Converse stream.
-	attest.Equal(t, handler.converseCalls.Load(), int32(1))
+	ok.Equal(t, handler.converseCalls.Load(), int32(1))
 }
 
 func TestConverseStreamClosedOnQuit(t *testing.T) {
@@ -215,13 +218,13 @@ func TestConverseStreamClosedOnQuit(t *testing.T) {
 	// Quit; the client must close its side of the stream so the server
 	// handler returns.
 	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
-	attest.True(t, cmd != nil)
+	ok.True(t, cmd != nil)
 
 	select {
 	case <-handler.converseDone:
 		// Handler returned: stream was closed.
 	case <-time.After(3 * time.Second):
-		t.Fatal("Converse handler still running after quit: stream was never closed")
+		ok.True(t, false, ok.Sprintf("Converse handler still running after quit: the stream was never closed"))
 	}
 }
 
@@ -240,12 +243,12 @@ func TestEnterWhileWaitingForResponseIsIgnored(t *testing.T) {
 	// Pressing enter while waiting must not send another message.
 	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	m = newModel.(model)
-	attest.True(t, cmd == nil, attest.Sprintf("enter while waiting should be ignored"))
-	attest.Equal(t, len(m.said), 1)
+	ok.True(t, cmd == nil, ok.Sprintf("enter while waiting should be ignored"))
+	ok.Equal(t, len(m.said), 1)
 
 	// And the view must render without panicking.
 	view := m.View()
-	attest.True(t, len(view.Content) > 0)
+	ok.True(t, len(view.Content) > 0)
 }
 
 func TestIntroduceStreamErrorIsSurfaced(t *testing.T) {
@@ -256,8 +259,8 @@ func TestIntroduceStreamErrorIsSurfaced(t *testing.T) {
 
 	msg := m.introduce("User")()
 
-	_, ok := msg.(errMsg)
-	attest.True(t, ok, attest.Sprintf("expected errMsg, got %T: %v", msg, msg))
+	_, isExpected := msg.(errMsg)
+	ok.True(t, isExpected, ok.Sprintf("expected errMsg, got %T: %v", msg, msg))
 }
 
 func TestInitialModelConfiguration(t *testing.T) {
@@ -268,13 +271,13 @@ func TestInitialModelConfiguration(t *testing.T) {
 	m := initialModel(client)
 
 	// Verify initial state
-	attest.False(t, m.hasIntroduced)
-	attest.False(t, m.waitingForResponse)
-	attest.Equal(t, m.err, nil)
-	attest.Equal(t, len(m.said), 0)
-	attest.Equal(t, len(m.sayResponses), 0)
-	attest.Equal(t, m.textInput.CharLimit, 156)
-	attest.Equal(t, m.textInput.Width(), 50)
+	ok.Equal(t, m.hasIntroduced, false, ok.Sprintf("hasIntroduced"))
+	ok.Equal(t, m.waitingForResponse, false, ok.Sprintf("waitingForResponse"))
+	ok.NoError(t, m.err)
+	ok.Equal(t, len(m.said), 0)
+	ok.Equal(t, len(m.sayResponses), 0)
+	ok.Equal(t, m.textInput.CharLimit, 156)
+	ok.Equal(t, m.textInput.Width(), 50)
 }
 
 func TestUpdateMethodRespondsToKeyMessages(t *testing.T) {
@@ -286,9 +289,9 @@ func TestUpdateMethodRespondsToKeyMessages(t *testing.T) {
 
 	// Simulate pressing 'a' key
 	newModel, _ := m.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
-	if cast, ok := newModel.(model); ok {
+	if cast, isExpected := newModel.(model); isExpected {
 		// Model should be updated
-		attest.Equal(t, cast.err, nil)
+		ok.NoError(t, cast.err)
 	}
 }
 
@@ -305,13 +308,13 @@ func TestErrorHandling(t *testing.T) {
 	newModel, cmd := m.Update(errMsg)
 
 	// Verify error state
-	if cast, ok := newModel.(model); ok {
-		attest.NotEqual(t, cast.err, nil)
-		attest.True(t, cast.err.Error() == "test error")
+	if cast, isExpected := newModel.(model); isExpected {
+		ok.Error(t, cast.err)
+		ok.True(t, cast.err.Error() == "test error")
 	}
 
 	// Command should be Quit
-	attest.NotEqual(t, cmd, nil)
+	ok.True(t, cmd != nil, ok.Sprintf("cmd should be non-nil"))
 }
 
 func TestSpinnerTickMessage(t *testing.T) {
@@ -326,7 +329,7 @@ func TestSpinnerTickMessage(t *testing.T) {
 	newModel, cmd := m.Update(tickMsg)
 
 	// Should handle the message without panicking
-	attest.NotEqual(t, newModel, nil)
+	ok.True(t, newModel != nil, ok.Sprintf("newModel should be non-nil"))
 	// Command may or may not be nil depending on spinner state
 	_ = cmd
 }
@@ -353,7 +356,7 @@ func TestConversationFlowSimpleModel(t *testing.T) {
 	// The test server has limitations with HTTP/2, so we skip execution here
 	// Instead, we verify the model structure is correct
 	cmd := m.say("How are you?")
-	attest.NotEqual(t, cmd, nil)
+	ok.True(t, cmd != nil, ok.Sprintf("cmd should be non-nil"))
 }
 
 func TestMessageUpdates(t *testing.T) {
@@ -368,9 +371,9 @@ func TestMessageUpdates(t *testing.T) {
 			setup: func(m *model) {},
 			msg:   introductionMsg([]string{"Hello", "World"}),
 			check: func(t *testing.T, m *model) {
-				attest.True(t, m.hasIntroduced)
-				attest.False(t, m.waitingForResponse)
-				attest.Equal(t, len(m.introductionReceived), 2)
+				ok.True(t, m.hasIntroduced)
+				ok.Equal(t, m.waitingForResponse, false, ok.Sprintf("waitingForResponse"))
+				ok.Equal(t, len(m.introductionReceived), 2)
 			},
 		},
 		{
@@ -381,9 +384,9 @@ func TestMessageUpdates(t *testing.T) {
 			},
 			msg: sayMsg("I'm doing well"),
 			check: func(t *testing.T, m *model) {
-				attest.False(t, m.waitingForResponse)
-				attest.Equal(t, len(m.sayResponses), 1)
-				attest.Equal(t, m.sayResponses[0], "I'm doing well")
+				ok.Equal(t, m.waitingForResponse, false, ok.Sprintf("waitingForResponse"))
+				ok.Equal(t, len(m.sayResponses), 1)
+				ok.Equal(t, m.sayResponses[0], "I'm doing well")
 			},
 		},
 	}
@@ -396,7 +399,7 @@ func TestMessageUpdates(t *testing.T) {
 			tt.setup(&m)
 
 			newModel, _ := m.Update(tt.msg)
-			if cast, ok := newModel.(model); ok {
+			if cast, isExpected := newModel.(model); isExpected {
 				tt.check(t, &cast)
 			}
 		})
@@ -411,9 +414,9 @@ func TestWindowSizeMessage(t *testing.T) {
 
 	// Send a window resize message
 	newModel, _ := m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
-	if cast, ok := newModel.(model); ok {
+	if cast, isExpected := newModel.(model); isExpected {
 		// Model should handle resize without errors or state changes
-		attest.Equal(t, cast.err, nil)
+		ok.NoError(t, cast.err)
 	}
 }
 
@@ -433,7 +436,7 @@ func TestConversationViewWithWaitingForResponse(t *testing.T) {
 
 	view := m.View()
 	content := view.Content
-	attest.True(t, len(content) > 0, attest.Sprintf("should have content"))
+	ok.True(t, len(content) > 0, ok.Sprintf("should have content"))
 }
 
 func TestDefaultKeyMessageHandling(t *testing.T) {
@@ -445,8 +448,8 @@ func TestDefaultKeyMessageHandling(t *testing.T) {
 	// Send a non-special key (not Enter, Ctrl+C, Esc)
 	// This tests the default case which delegates to textInput
 	newModel, _ := m.Update(tea.KeyPressMsg{Code: 'b', Text: "b"})
-	if cast, ok := newModel.(model); ok {
-		attest.False(t, cast.waitingForResponse)
+	if cast, isExpected := newModel.(model); isExpected {
+		ok.Equal(t, cast.waitingForResponse, false, ok.Sprintf("waitingForResponse"))
 	}
 }
 
@@ -459,8 +462,8 @@ func TestDefaultMessageHandling(t *testing.T) {
 	// Send an unknown message type (not KeyPressMsg, errMsg, TickMsg, introductionMsg, sayMsg)
 	// This tests the default case which delegates to textInput
 	newModel, _ := m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
-	if cast, ok := newModel.(model); ok {
-		attest.Equal(t, cast.err, nil)
+	if cast, isExpected := newModel.(model); isExpected {
+		ok.NoError(t, cast.err)
 	}
 }
 
@@ -473,10 +476,10 @@ func TestEnterKeyInIntroduction(t *testing.T) {
 	// Simulate typing a name and pressing enter in introduction mode
 	m.textInput.SetValue("Charlie")
 	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if cast, ok := newModel.(model); ok {
+	if cast, isExpected := newModel.(model); isExpected {
 		// After pressing enter, should be waiting for response in introduction flow
-		attest.True(t, cast.waitingForResponse, attest.Sprintf("should be waiting for response after enter in introduction"))
-		attest.NotEqual(t, cmd, nil, attest.Sprintf("should return a command"))
+		ok.True(t, cast.waitingForResponse, ok.Sprintf("should be waiting for response after enter in introduction"))
+		ok.True(t, cmd != nil, ok.Sprintf("should return a command"))
 	}
 }
 
@@ -493,10 +496,10 @@ func TestEnterKeyInConversation(t *testing.T) {
 	// Simulate typing and pressing enter in conversation mode
 	m.textInput.SetValue("How are you?")
 	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if cast, ok := newModel.(model); ok {
+	if cast, isExpected := newModel.(model); isExpected {
 		// After pressing enter in conversation, should be waiting for response
-		attest.True(t, cast.waitingForResponse, attest.Sprintf("should be waiting for response after enter in conversation"))
-		attest.NotEqual(t, cmd, nil, attest.Sprintf("should return a command"))
+		ok.True(t, cast.waitingForResponse, ok.Sprintf("should be waiting for response after enter in conversation"))
+		ok.True(t, cmd != nil, ok.Sprintf("should return a command"))
 	}
 }
 
@@ -514,7 +517,7 @@ func TestSayCommand(t *testing.T) {
 
 	// Execute the say command
 	cmd := m.say("How are you?")
-	attest.NotEqual(t, cmd, nil)
+	ok.True(t, cmd != nil, ok.Sprintf("cmd should be non-nil"))
 
 	// Actually execute the command and check the result
 	msg := cmd()
@@ -523,12 +526,12 @@ func TestSayCommand(t *testing.T) {
 	switch v := msg.(type) {
 	case sayMsg:
 		// Successfully received response from ELIZA
-		attest.True(t, len(v) > 0)
+		ok.True(t, len(v) > 0)
 	case errMsg:
 		// Stream communication error is acceptable - still exercises the code path
 		_ = v
 	default:
-		attest.False(t, true, attest.Sprintf("unexpected message type: %T", msg))
+		ok.True(t, false, ok.Sprintf("unexpected message type: %T", msg))
 	}
 }
 
@@ -547,13 +550,13 @@ func TestSayCommandWithServerError(t *testing.T) {
 
 	// Execute the say command - should fail because server returns error
 	cmd := m.say("Tell me more")
-	attest.NotEqual(t, cmd, nil)
+	ok.True(t, cmd != nil, ok.Sprintf("cmd should be non-nil"))
 
 	// Execute the command
 	msg := cmd()
 
 	// Should get an error since server fails
-	errMsg, ok := msg.(errMsg)
-	attest.True(t, ok, attest.Sprintf("expected errMsg, got %T", msg))
-	attest.True(t, errMsg != nil)
+	errMsg, isExpected := msg.(errMsg)
+	ok.True(t, isExpected, ok.Sprintf("expected errMsg, got %T", msg))
+	ok.True(t, errMsg != nil)
 }
