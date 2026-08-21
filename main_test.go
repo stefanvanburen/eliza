@@ -12,9 +12,9 @@ import (
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
 	tea "charm.land/bubbletea/v2"
 	"connectrpc.com/connect"
-	"go.akshayshah.org/memhttp"
 	"go.vanburen.xyz/ok"
 	"net/http"
+	"net/http/httptest"
 )
 
 // fakeElizaServiceHandler implements the ELIZA service for testing.
@@ -121,14 +121,7 @@ func startFakeServerWithErrors(t *testing.T) elizav1connect.ElizaServiceClient {
 	mux := http.NewServeMux()
 	mux.Handle(elizav1connect.NewElizaServiceHandler(&fakeElizaServiceErrorHandler{}))
 
-	server, err := memhttp.New(mux)
-	ok.MustNoError(t, err)
-
-	t.Cleanup(func() {
-		ok.NoError(t, server.Close())
-	})
-
-	return elizav1connect.NewElizaServiceClient(server.Client(), "https://example.com")
+	return elizav1connect.NewElizaServiceClient(inMemoryClient(t, mux), "https://example.com")
 }
 
 // startFakeServer creates an in-memory ELIZA service and returns the client.
@@ -151,17 +144,7 @@ func startFakeServerWithHandler(t *testing.T) (elizav1connect.ElizaServiceClient
 	mux := http.NewServeMux()
 	mux.Handle(elizav1connect.NewElizaServiceHandler(handler))
 
-	// Create in-memory HTTP server with TLS and HTTP/2 support for bidi streams
-	// The bidirectional Converse RPC requires HTTP/2, which is enabled by default when TLS is used
-	server, err := memhttp.New(mux)
-	ok.MustNoError(t, err)
-
-	// Cleanup
-	t.Cleanup(func() {
-		ok.NoError(t, server.Close())
-	})
-
-	return elizav1connect.NewElizaServiceClient(server.Client(), "https://example.com"), handler
+	return elizav1connect.NewElizaServiceClient(inMemoryClient(t, mux), "https://example.com"), handler
 }
 
 // sendMessage drives a full conversation exchange through the Update loop:
@@ -559,4 +542,22 @@ func TestSayCommandWithServerError(t *testing.T) {
 	errMsg, isExpected := msg.(errMsg)
 	ok.True(t, isExpected, ok.Sprintf("expected errMsg, got %T", msg))
 	ok.True(t, errMsg != nil)
+}
+
+// inMemoryClient serves mux on httptest's in-memory network and returns a
+// client for it. HTTPS, because the bidirectional Converse RPC needs the
+// HTTP/2 that TLS negotiates.
+//
+// The CloseClientConnections cleanup is load-bearing. NewTestServer registers
+// its own cleanup calling Close, which waits for every in-flight handler to
+// return; a test that leaves a Converse stream open leaves its handler parked
+// in Receive forever, and the wait never ends. Cleanups run last-registered
+// first, so registering this one here tears the connections down before that
+// wait begins.
+func inMemoryClient(t *testing.T, mux http.Handler) *http.Client {
+	t.Helper()
+	server := httptest.NewTestServer(t, mux)
+	server.EnableHTTP2 = true
+	t.Cleanup(server.CloseClientConnections)
+	return server.Client()
 }
