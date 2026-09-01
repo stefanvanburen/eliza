@@ -1,7 +1,7 @@
 buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.20.0-20230913231627-233fca715f49.1 h1:BaLf8D2o6Fv290M9NrifZEbK7RAOeGhFEgcpYVJQBKY=
 buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.20.0-20230913231627-233fca715f49.1/go.mod h1:1k1P8yNAEujQtZVzYAuCaqCLRVI2LifDF0RmRR2b8KE=
-buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.11-20230913231627-233fca715f49.1 h1:xjZ4zgRFd6PmzJtCNiShiaUJutlTSyMucmwI5DtdPWw=
-buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.11-20230913231627-233fca715f49.1/go.mod h1:kmRSlmVl/HxXLf/g5I/cnxFc0DlcSADUrlrv0rQ3LuY=
+buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.12-20230913231627-233fca715f49.1 h1:cMpfqZEmw8ZdfgSPUtHB/fInEduAAActcMSt6zBXSFo=
+buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.12-20230913231627-233fca715f49.1/go.mod h1:Q3bb88X5AB67NBfOK/BfNEaOUssVwuzKdcnU9FhreZE=
 charm.land/bubbles/v2 v2.1.1 h1:7r55WzBxpo/R3z98hGmY7KKPd3ET6vsf0Fb9sDHOV60=
 charm.land/bubbles/v2 v2.1.1/go.mod h1:GE6M31gaWZVXzGw73OeuTTgy4lX+OtkH0E5ymnNsHxo=
 charm.land/bubbletea/v2 v2.0.8 h1:SxTJMhCAI3lbPmy4SgX5LWZ24AdINr4I6UEqzZvYJuY=
@@ -80,8 +80,8 @@ golang.org/x/tools v0.44.1-0.20260420230617-19499e7caabc h1:vSv/HN1q9eoPD7lMyJYV
 golang.org/x/tools v0.44.1-0.20260420230617-19499e7caabc/go.mod h1:KA0AfVErSdxRZIsOVipbv3rQhVXTnlU6UhKxHd1seDI=
 golang.org/x/tools/go/expect v0.1.1-deprecated h1:jpBZDwmgPhXsKZC6WhL20P4b/wmnpsEAGHaNy0n/rJM=
 golang.org/x/tools/go/expect v0.1.1-deprecated/go.mod h1:eihoPOH+FgIqa3FpoTwguz/bVUSGBlGQU67vpBeOrBY=
-google.golang.org/protobuf v1.36.11 h1:fV6ZwhNocDyBLK0dj+fg8ektcVegBBuEolpbTQyBNVE=
-google.golang.org/protobuf v1.36.11/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
+google.golang.org/protobuf v1.36.12 h1:pJOKDDOyeXErUroCihFAd5LQuwXBSpVnKGrj5o/fwxc=
+google.golang.org/protobuf v1.36.12/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 honnef.co/go/tools v0.8.0 h1:UacpzPr7D6i5BAjTkA7sNVcx4kIbhAZcQ4zYtKiXx68=

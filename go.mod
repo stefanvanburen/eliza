@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.20.0-20230913231627-233fca715f49.1
-	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.11-20230913231627-233fca715f49.1
+	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.12-20230913231627-233fca715f49.1
 	charm.land/bubbles/v2 v2.1.1
 	charm.land/bubbletea/v2 v2.0.8
 	connectrpc.com/connect v1.20.0
@@ -39,7 +39,7 @@ require (
 	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/tools v0.44.1-0.20260420230617-19499e7caabc // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 	honnef.co/go/tools v0.8.0 // indirect
 	znkr.io/diff v1.0.0 // indirect
 )
