@@ -3,11 +3,11 @@ module go.vanburen.xyz/eliza
 go 1.27.0
 
 require (
-	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.20.0-20230913231627-233fca715f49.1
+	buf.build/gen/go/connectrpc/eliza/connectrpc/go v1.21.0-20230913231627-233fca715f49.1
 	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.12-20230913231627-233fca715f49.2
 	charm.land/bubbles/v2 v2.2.1
 	charm.land/bubbletea/v2 v2.0.10
-	connectrpc.com/connect v1.20.0
+	connectrpc.com/connect v1.21.0
 	github.com/bufbuild/httplb v0.4.1
 	go.vanburen.xyz/ok v0.4.0
 )
