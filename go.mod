@@ -9,7 +9,7 @@ require (
 	charm.land/bubbletea/v2 v2.0.10
 	connectrpc.com/connect v1.21.0
 	github.com/bufbuild/httplb v0.4.1
-	go.vanburen.xyz/ok v0.4.0
+	go.vanburen.xyz/ok v0.7.0
 )
 
 require (
