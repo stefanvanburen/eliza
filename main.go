@@ -11,17 +11,20 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
 
-	"buf.build/gen/go/connectrpc/eliza/connectrpc/go/connectrpc/eliza/v1/elizav1connect"
+	"buf.build/gen/go/connectrpc/eliza/connectrpc/go/v2/connectrpc/eliza/v1/elizav1connect"
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
 	"charm.land/bubbles/v2/spinner"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 	"github.com/bufbuild/httplb"
 )
 
@@ -31,10 +34,10 @@ func main() {
 
 	if _, err := tea.NewProgram(
 		initialModel(
-			elizav1connect.NewElizaServiceClient(
+			elizav1connect.NewElizaServiceClient(connect.NewClient(connecthttp.NewTransport(
 				client,
 				"https://demo.connectrpc.com",
-			),
+			))),
 		),
 	).Run(); err != nil {
 		fmt.Printf("error: %s\n", err)
@@ -52,7 +55,7 @@ type model struct {
 	hasIntroduced      bool
 	waitingForResponse bool
 
-	conversation *connect.BidiStreamForClient[elizav1.ConverseRequest, elizav1.ConverseResponse]
+	conversation *elizav1connect.ElizaServiceConverseClientStream
 
 	name                 string
 	introductionReceived []string
@@ -110,7 +113,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.conversation == nil {
 				// Open the bidi stream once, on first use; it is
 				// reused for the rest of the conversation.
-				m.conversation = m.client.Converse(context.Background())
+				conversation, err := m.client.Converse(context.Background())
+				if err != nil {
+					return m, func() tea.Msg { return errMsg(err) }
+				}
+				m.conversation = &conversation
 			}
 			return m, m.say(text)
 		case "ctrl+c", "esc":
@@ -204,22 +211,24 @@ func (m model) conversationView() string {
 func (m model) introduce(name string) tea.Cmd {
 	return func() tea.Msg {
 		introduceResponse, err := m.client.Introduce(context.Background(),
-			connect.NewRequest(&elizav1.IntroduceRequest{
+			&elizav1.IntroduceRequest{
 				Name: name,
-			}),
+			},
 		)
 		if err != nil {
 			return errMsg(err)
 		}
 		defer introduceResponse.Close()
 		var introductionLines []string
-		for introduceResponse.Receive() {
-			introductionLines = append(introductionLines, introduceResponse.Msg().Sentence)
-		}
-		// Receive returns false on both end-of-stream and error;
-		// surface the error if there was one.
-		if err := introduceResponse.Err(); err != nil {
-			return errMsg(err)
+		for {
+			msg, err := introduceResponse.Receive()
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				return errMsg(err)
+			}
+			introductionLines = append(introductionLines, msg.Sentence)
 		}
 		return introductionMsg(introductionLines)
 	}
@@ -229,8 +238,8 @@ func (m model) introduce(name string) tea.Cmd {
 // opened, so the server handler can return.
 func (m model) closeConversation() {
 	if m.conversation != nil {
-		_ = m.conversation.CloseRequest()
-		_ = m.conversation.CloseResponse()
+		_ = m.conversation.CloseSend()
+		_ = m.conversation.Close()
 	}
 }
 

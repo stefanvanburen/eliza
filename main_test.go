@@ -8,13 +8,12 @@ import (
 	"testing"
 	"testing/synctest"
 
-	"buf.build/gen/go/connectrpc/eliza/connectrpc/go/connectrpc/eliza/v1/elizav1connect"
+	"buf.build/gen/go/connectrpc/eliza/connectrpc/go/v2/connectrpc/eliza/v1/elizav1connect"
 	elizav1 "buf.build/gen/go/connectrpc/eliza/protocolbuffers/go/connectrpc/eliza/v1"
 	tea "charm.land/bubbletea/v2"
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connectinprocess"
 	"go.vanburen.xyz/ok"
-	"net/http"
-	"net/http/httptest"
 )
 
 // fakeElizaServiceHandler implements the ELIZA service for testing.
@@ -30,11 +29,11 @@ type fakeElizaServiceHandler struct {
 
 func (f *fakeElizaServiceHandler) Introduce(
 	ctx context.Context,
-	req *connect.Request[elizav1.IntroduceRequest],
-	stream *connect.ServerStream[elizav1.IntroduceResponse],
+	req *elizav1.IntroduceRequest,
+	stream elizav1connect.ElizaServiceIntroduceServerStream,
 ) error {
 	sentences := []string{
-		fmt.Sprintf("Hello %s, I'm ELIZA.", req.Msg.Name),
+		fmt.Sprintf("Hello %s, I'm ELIZA.", req.Name),
 		"How are you feeling today?",
 		"I'm here to help you.",
 	}
@@ -51,17 +50,17 @@ func (f *fakeElizaServiceHandler) Introduce(
 
 func (f *fakeElizaServiceHandler) Say(
 	ctx context.Context,
-	req *connect.Request[elizav1.SayRequest],
-) (*connect.Response[elizav1.SayResponse], error) {
-	response := connect.NewResponse(&elizav1.SayResponse{
-		Sentence: fmt.Sprintf("I see. You said: %q. Tell me more.", req.Msg.Sentence),
-	})
+	req *elizav1.SayRequest,
+) (*elizav1.SayResponse, error) {
+	response := &elizav1.SayResponse{
+		Sentence: fmt.Sprintf("I see. You said: %q. Tell me more.", req.Sentence),
+	}
 	return response, nil
 }
 
 func (f *fakeElizaServiceHandler) Converse(
 	ctx context.Context,
-	stream *connect.BidiStream[elizav1.ConverseRequest, elizav1.ConverseResponse],
+	stream elizav1connect.ElizaServiceConverseServerStream,
 ) error {
 	f.converseCalls.Add(1)
 	if f.converseDone != nil {
@@ -93,22 +92,22 @@ type fakeElizaServiceErrorHandler struct {
 
 func (f *fakeElizaServiceErrorHandler) Introduce(
 	ctx context.Context,
-	req *connect.Request[elizav1.IntroduceRequest],
-	stream *connect.ServerStream[elizav1.IntroduceResponse],
+	req *elizav1.IntroduceRequest,
+	stream elizav1connect.ElizaServiceIntroduceServerStream,
 ) error {
 	return fmt.Errorf("introduce error")
 }
 
 func (f *fakeElizaServiceErrorHandler) Say(
 	ctx context.Context,
-	req *connect.Request[elizav1.SayRequest],
-) (*connect.Response[elizav1.SayResponse], error) {
+	req *elizav1.SayRequest,
+) (*elizav1.SayResponse, error) {
 	return nil, fmt.Errorf("say error")
 }
 
 func (f *fakeElizaServiceErrorHandler) Converse(
 	ctx context.Context,
-	stream *connect.BidiStream[elizav1.ConverseRequest, elizav1.ConverseResponse],
+	stream elizav1connect.ElizaServiceConverseServerStream,
 ) error {
 	// Immediately fail on any receive attempt
 	return fmt.Errorf("converse error")
@@ -118,10 +117,7 @@ func (f *fakeElizaServiceErrorHandler) Converse(
 func startFakeServerWithErrors(t *testing.T) elizav1connect.ElizaServiceClient {
 	t.Helper()
 
-	mux := http.NewServeMux()
-	mux.Handle(elizav1connect.NewElizaServiceHandler(&fakeElizaServiceErrorHandler{}))
-
-	return elizav1connect.NewElizaServiceClient(inMemoryClient(t, mux), "https://example.com")
+	return inProcessClient(&fakeElizaServiceErrorHandler{})
 }
 
 // startFakeServer creates an in-memory ELIZA service and returns the client.
@@ -140,11 +136,7 @@ func startFakeServerWithHandler(t *testing.T) (elizav1connect.ElizaServiceClient
 		converseDone: make(chan struct{}, 8),
 	}
 
-	// Setup Connect handlers
-	mux := http.NewServeMux()
-	mux.Handle(elizav1connect.NewElizaServiceHandler(handler))
-
-	return elizav1connect.NewElizaServiceClient(inMemoryClient(t, mux), "https://example.com"), handler
+	return inProcessClient(handler), handler
 }
 
 // sendMessage drives a full conversation exchange through the Update loop:
@@ -191,6 +183,7 @@ func TestConverseStreamIsReused(t *testing.T) {
 		ok.Equal(t, len(m.sayResponses), 2)
 		// Both messages must travel over a single Converse stream.
 		ok.Equal(t, handler.converseCalls.Load(), int32(1))
+		m.closeConversation()
 	})
 }
 
@@ -515,7 +508,10 @@ func TestSayCommand(t *testing.T) {
 		m.hasIntroduced = true
 		m.name = "Charlie"
 		m.introductionReceived = []string{"Hello Charlie"}
-		m.conversation = m.client.Converse(context.Background())
+		conversation, err := m.client.Converse(context.Background())
+		ok.MustNoError(t, err)
+		defer conversation.Close()
+		m.conversation = &conversation
 
 		// Execute the say command
 		cmd := m.say("How are you?")
@@ -549,7 +545,9 @@ func TestSayCommandWithServerError(t *testing.T) {
 	m.hasIntroduced = true
 	m.name = "User"
 	m.introductionReceived = []string{"Hello User"}
-	m.conversation = m.client.Converse(context.Background())
+	conversation, err := m.client.Converse(context.Background())
+	ok.MustNoError(t, err)
+	m.conversation = &conversation
 
 	// Execute the say command - should fail because server returns error
 	cmd := m.say("Tell me more")
@@ -564,20 +562,10 @@ func TestSayCommandWithServerError(t *testing.T) {
 	ok.True(t, errMsg != nil)
 }
 
-// inMemoryClient serves mux on httptest's in-memory network and returns a
-// client for it. HTTPS, because the bidirectional Converse RPC needs the
-// HTTP/2 that TLS negotiates.
-//
-// The CloseClientConnections cleanup is load-bearing. NewTestServer registers
-// its own cleanup calling Close, which waits for every in-flight handler to
-// return; a test that leaves a Converse stream open leaves its handler parked
-// in Receive forever, and the wait never ends. Cleanups run last-registered
-// first, so registering this one here tears the connections down before that
-// wait begins.
-func inMemoryClient(t *testing.T, mux http.Handler) *http.Client {
-	t.Helper()
-	server := httptest.NewTestServer(t, mux)
-	server.EnableHTTP2 = true
-	t.Cleanup(server.CloseClientConnections)
-	return server.Client()
+// inProcessClient returns a client that dispatches every RPC straight to
+// handler, with no network in between.
+func inProcessClient(handler elizav1connect.ElizaServiceHandler) elizav1connect.ElizaServiceClient {
+	server := connect.NewServer()
+	elizav1connect.RegisterElizaServiceHandler(server, handler)
+	return elizav1connect.NewElizaServiceClient(connect.NewClient(connectinprocess.New(server)))
 }
