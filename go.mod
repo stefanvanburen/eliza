@@ -7,7 +7,7 @@ require (
 	buf.build/gen/go/connectrpc/eliza/protocolbuffers/go v1.36.12-20230913231627-233fca715f49.2
 	charm.land/bubbles/v2 v2.2.1
 	charm.land/bubbletea/v2 v2.0.10
-	connectrpc.com/connect/v2 v2.0.0
+	connectrpc.com/connect/v2 v2.0.2
 	github.com/bufbuild/httplb v0.4.1
 	go.vanburen.xyz/ok v0.8.0
 )
